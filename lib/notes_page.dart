@@ -37,12 +37,35 @@ class _NotesPageState extends State<NotesPage> {
         .insert({'body': textController.text});
   }
 
+  final _notesStream =
+      Supabase.instance.client.from('notes').stream(primaryKey: ['id']);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: addNewNote,
         child: const Icon(Icons.add),
+      ),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _notesStream,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final notes = snapshot.data!;
+
+          return ListView.builder(
+            itemCount: notes.length,
+            itemBuilder: (context, index) {
+              final note = notes[index];
+              final noteText = note['body'];
+
+              return Text(noteText);
+            },
+          );
+        },
       ),
     );
   }
